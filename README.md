@@ -1,4 +1,5 @@
-#Token Gating & Monitoring — Quick Start
+
+# Token Gating & Monitoring — Quick Start
 
 ## Step 1) Install dependencies
 
