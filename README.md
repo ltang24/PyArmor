@@ -1,4 +1,4 @@
-# UPenn Token Gating & Monitoring — Quick Start 
+#Token Gating & Monitoring — Quick Start
 
 ## Step 1) Install dependencies
 
@@ -33,8 +33,8 @@ token = input("Enter token: ").strip()
 if token not in allow:
     print("❌ Invalid token."); raise SystemExit(1)
 
-
-upload_log(token)  
+# Log after successful auth (optionally add a note)
+upload_log(token)
 
 # Continue with their pipeline
 run_their_pipeline()  # ← replace with the collaborator’s real entry call
@@ -52,22 +52,31 @@ run_their_pipeline()  # ← replace with the collaborator’s real entry call
 ```bash
 # Encrypt a single file
 pyarmor gen -O dist main.py
-
 ```
 
 **Send to the collaborator**: the encrypted artifact + their token.
 
 ## Step 5) UPenn monitoring
 
-1. **Backend (receives logs)**
+### 5.1 Backend (receives logs)
+
+Start the Flask log server:
 
 ```bash
 python log_server.py
 # Listening on http://127.0.0.1:8888
 ```
 
-2. **Frontend (live viewer)**
-   Open `http://127.0.0.1:8888/` in a browser and click “Connect” to see logs in real time.
+**What you should see:** the server prints each received log in the console.
+
+![Flask server receiving logs](server-console.png)
+
+### 5.2 Frontend (live viewer)
+
+Open `http://127.0.0.1:8888/` in a browser and click **Connect** to see logs stream in real time.
+**What you should see:** new log lines appear as collaborators run their code.
+
+![Realtime log viewer](frontend-viewer.png)
 
 ## Step 6) Collaborator usage & outcomes
 
@@ -75,7 +84,7 @@ python log_server.py
 
 ```bash
 python <their_entry>.py
-
+# The script will prompt for a token.
 ```
 
 **If validation succeeds**
@@ -88,7 +97,8 @@ python <their_entry>.py
 * The script exits (or prints “Invalid token”).
 * **No** logs are sent (nothing appears in the viewer).
 
+**What a successful run looks like in the terminal:**
+
+![Terminal run success](run-main-success.png)
+
 ---
-![Terminal run success](images/run-main-success.png)
-![Realtime log viewer](images/frontend-viewer.png)
-![Flask server receiving logs](images/server-console.png)
