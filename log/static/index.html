@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>实时日志查看器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+        }
+
+        .bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        input[type=text] {
+            flex: 1;
+            min-width: 280px;
+            padding: 8px;
+        }
+
+        label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        #status {
+            font-size: 12px;
+            color: #666;
+            margin-left: 6px;
+        }
+
+        #log {
+            height: 72vh;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            overflow: auto;
+            background: #0b1022;
+            color: #e6e6e6;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.35;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>实时日志查看器</h1>
+    <div class="bar">
+        <input id="path" type="text" placeholder="/绝对路径/到/日志.log（留空=默认log.txt）" />
+        <label><input type="checkbox" id="fromStart"> 从头读取</label>
+        <button id="connect">连接</button>
+        <button id="disconnect" disabled>断开</button>
+        <span id="status">未连接</span>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const logEl = $('log');
+        const statusEl = $('status');
+        const connectBtn = $('connect');
+        const disconnectBtn = $('disconnect');
+        const pathInput = $('path');
+        const fromStart = $('fromStart');
+
+        let es = null;
+        let autoscroll = true;
+
+        logEl.addEventListener('scroll', () => {
+            const nearBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 10;
+            autoscroll = nearBottom;
+        });
+
+        function append(line) {
+            logEl.textContent += (logEl.textContent ? "\n" : "") + line;
+            if (autoscroll) logEl.scrollTop = logEl.scrollHeight;
+        }
+        function setStatus(s) { statusEl.textContent = s; }
+
+        connectBtn.onclick = () => {
+            const url = new URL(`/stream`, window.location.origin);
+            const p = pathInput.value.trim();
+            if (p) url.searchParams.set('path', p);
+            if (fromStart.checked) url.searchParams.set('from', '1');
+
+            es = new EventSource(url);
+            setStatus('连接中...');
+            connectBtn.disabled = true;
+
+            es.onopen = () => {
+                setStatus('已连接');
+                disconnectBtn.disabled = false;
+            };
+            es.onmessage = (e) => append(e.data);
+            es.onerror = () => {
+                setStatus('连接异常（服务端可能断开或重试中）');
+            };
+        };
+
+        disconnectBtn.onclick = () => {
+            if (es) es.close();
+            setStatus('未连接');
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+        };
+    </script>
+</body>
+
+</html>
